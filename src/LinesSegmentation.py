@@ -6,12 +6,13 @@ import cv2
 from scipy.signal import argrelmin
 from WordSegmentation import createKernel
 
+
 def lineSegmentation(img, kernelSize=25, sigma=11, theta=7):
     """Scale space technique for lines segmentation proposed by R. Manmatha:
 	http://ciir.cs.umass.edu/pubfiles/mm-27.pdf
     Args:
 		img: image of the text to be segmented on lines.
-		kernelSize: size of filter kernel, must be an odd integer.
+        kernelSize: size of filter kernel, must be an odd integer.
 		sigma: standard deviation of Gaussian function used for filter kernel.
 		theta: approximated width/height ratio of words, filter function is distorted by this factor.
 		minArea: ignore word candidates smaller than specified area.
