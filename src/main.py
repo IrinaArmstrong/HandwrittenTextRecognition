@@ -28,8 +28,8 @@ def main():
     # add_argument() - specify which command-line options the program is willing to accept.
     # action - function, that will be executed, when appropriate argument received
     # store_true - option, if appropriate argument received, then = true
-    parser.add_argument('--text', help='image - is a full text consist of many lines', action='store_true')
-    parser.add_argument('--line', help='image - is line with words', action='store_true')
+    parser.add_argument('--text', help='image - is a full text consist of many lines', action='store_true', default=True)
+    parser.add_argument('--line', help='image - is line with words', action='store_true', default=False)
     parser.add_argument('--train', help='train the NN', action='store_true')
     parser.add_argument('--validate', help='validate the NN', action='store_true')
     parser.add_argument('--beamsearch', help='use beam search instead of best path decoding', action='store_true')
@@ -51,7 +51,7 @@ def main():
             img = cv2.imread('%s%s' % (FilePaths.fnTexts, f))
             tmp_lines = lineSegmentation(img)
             found_lines.append(tmp_lines)
-            save_tmp_data(tmp_lines, FilePaths.fnLines, type='line')
+            save_tmp_data(tmp_lines, FilePaths.fnLines, i, type='line')
 
     elif args.line:
         imgFiles = os.listdir(FilePaths.fnLines)
@@ -68,11 +68,11 @@ def main():
             # - minArea: ignore word candidates smaller than specified area
             tmp_words = wordSegmentation(img, kernelSize=25, sigma=11, theta=7, minArea=100)
             found_words.append(tmp_words)
-            save_tmp_data(tmp_words, FilePaths.fnInfer, type='word')
+            save_tmp_data(tmp_words, FilePaths.fnInfer, i, type='word')
 
 
 
-def save_tmp_data(data, path, type):
+def save_tmp_data(data, path, num, type):
     """ Save found lines in texts """
     # write output to 'out/inputFileName' directory
     if not os.path.exists('%s' % path):
@@ -86,13 +86,16 @@ def save_tmp_data(data, path, type):
         for (j, w) in enumerate(data):
             (wordBox, wordImg) = w
             (x, y, w, h) = wordBox
-            cv2.imwrite('%s/%d.png' % (data, j), wordImg)  # save word
+            cv2.imwrite('%s/%d%d.png' % (data, num, j), wordImg)  # save word
 
     elif type == 'line':
         # iterate over all segmented lines
         print('Segmented into %d lines' % len(data))
         for (j, w) in enumerate(data):
-            cv2.imwrite('%s/%d.png' % (path, j), w)  # save line
+            cv2.imshow('line', w)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+            cv2.imwrite('%s/%d%d.png' % (path, num, j), w)  # save line
 
 if __name__ == '__main__':
 	main()
