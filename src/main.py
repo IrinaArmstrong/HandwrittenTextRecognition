@@ -53,23 +53,30 @@ def main():
             found_lines.append(tmp_lines)
             save_tmp_data(tmp_lines, FilePaths.fnLines, i, type='line')
 
+            res_words = segment_to_words(found_lines)
+            for (j, l) in enumerate(res_words):
+                save_tmp_data(tmp_lines, FilePaths.fnInfer, i, type='word')
+
+
     elif args.line:
         imgFiles = os.listdir(FilePaths.fnLines)
         print("Files found in data dir:{0}".format(len(imgFiles)))
-        found_words = []
-        for (i, f) in enumerate(imgFiles):
-            print("File #", i, " Name: ", f)
-            print('Segmenting words of sample %s' % f)
-            img = prepareImg(cv2.imread('%s%s' % (FilePaths.fnLines, f)), 50)
-            # execute segmentation with given parameters
-            # -kernelSize: size of filter kernel (odd integer)
-            # -sigma: standard deviation of Gaussian function used for filter kernel
-            # -theta: approximated width/height ratio of words, filter function is distorted by this factor
-            # - minArea: ignore word candidates smaller than specified area
-            tmp_words = wordSegmentation(img, kernelSize=25, sigma=11, theta=7, minArea=100)
-            found_words.append(tmp_words)
-            save_tmp_data(tmp_words, FilePaths.fnInfer, i, type='word')
 
+
+def segment_to_words(files):
+    found_words = []
+    for (i, f) in enumerate(files):
+        print("File #", i, " Name: ", f)
+        print('Segmenting words of sample %s' % f)
+        img = prepareImg(cv2.imread('%s%s' % (FilePaths.fnLines, f)), 50)
+        # execute segmentation with given parameters
+        # -kernelSize: size of filter kernel (odd integer)
+        # -sigma: standard deviation of Gaussian function used for filter kernel
+        # -theta: approximated width/height ratio of words, filter function is distorted by this factor
+        # - minArea: ignore word candidates smaller than specified area
+        tmp_words = wordSegmentation(img, kernelSize=25, sigma=11, theta=7, minArea=100)
+        found_words.append(tmp_words)
+    return found_words
 
 
 def save_tmp_data(data, path, num, type):
@@ -92,9 +99,9 @@ def save_tmp_data(data, path, num, type):
         # iterate over all segmented lines
         print('Segmented into %d lines' % len(data))
         for (j, w) in enumerate(data):
-            cv2.imshow('line', w)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+            # cv2.imshow('line', w)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
             cv2.imwrite('%s/%d%d.png' % (path, num, j), w)  # save line
 
 if __name__ == '__main__':

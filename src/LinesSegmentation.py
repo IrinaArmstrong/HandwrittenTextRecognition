@@ -19,9 +19,15 @@ def lineSegmentation(img, kernelSize=25, sigma=11, theta=7):
 	Returns:
 		List of lines (segmented input img)
 	"""
-    img_tmp = np.transpose(prepareTextImg(img))
+
+    # cv2.imshow('untransposed', img)
+    img_tmp = np.transpose(prepareTextImg(img))# image to be segmented (un-normalized)
+    img_tmp_norm = normalize(img_tmp)
+    # cv2.imshow('transposed', img_tmp)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
     k = createKernel(kernelSize, sigma, theta)
-    imgFiltered = cv2.filter2D(img_tmp, -1, k, borderType=cv2.BORDER_REPLICATE)
+    imgFiltered = cv2.filter2D(img_tmp_norm, -1, k, borderType=cv2.BORDER_REPLICATE)
     img_tmp1 = normalize(imgFiltered)
     # Make summ elements in columns to get function of pixels value for each column
     summ_pix = np.sum(img_tmp1, axis = 0)
@@ -31,11 +37,11 @@ def lineSegmentation(img, kernelSize=25, sigma=11, theta=7):
     return found_lines
 
 def prepareTextImg(img):
-    """convert given image to grayscale image (if needed) and normalize it"""
+    """convert given image to grayscale image (if needed) and return it"""
     assert img.ndim in (2, 3)
     if img.ndim == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    return normalize(img)
+    return (img)
 
 def normalize(img):
     """ Normalize input image:
@@ -79,7 +85,7 @@ def crop_text_to_lines(text, blanks):
     lines = []
     for i, blank in enumerate(blanks):
         x2 = blank
-        line = text[:, x1:x2]
+        line = text[:,  x1:x2]
         lines.append(line)
         x1 = blank
     print("Lines found: {0}".format(len(lines)))
