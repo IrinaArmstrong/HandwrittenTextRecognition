@@ -20,12 +20,8 @@ def lineSegmentation(img, kernelSize=25, sigma=11, theta=7):
 		List of lines (segmented input img)
 	"""
 
-    # cv2.imshow('untransposed', img)
     img_tmp = np.transpose(prepareTextImg(img))# image to be segmented (un-normalized)
     img_tmp_norm = normalize(img_tmp)
-    # cv2.imshow('transposed', img_tmp)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
     k = createKernel(kernelSize, sigma, theta)
     imgFiltered = cv2.filter2D(img_tmp_norm, -1, k, borderType=cv2.BORDER_REPLICATE)
     img_tmp1 = normalize(imgFiltered)
@@ -37,7 +33,7 @@ def lineSegmentation(img, kernelSize=25, sigma=11, theta=7):
     return found_lines
 
 def prepareTextImg(img):
-    """convert given image to grayscale image (if needed) and return it"""
+    """ Convert given text image to grayscale image (if needed) and return it. """
     assert img.ndim in (2, 3)
     if img.ndim == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -67,7 +63,7 @@ def smooth(x, window_len=11, window='hanning'):
     if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
         raise ValueError("Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
     s = np.r_[x[window_len-1:0:-1],x,x[-2:-window_len-1:-1]]
-    #print(len(s))
+
     if window == 'flat': #moving average
         w = np.ones(window_len,'d')
     else:

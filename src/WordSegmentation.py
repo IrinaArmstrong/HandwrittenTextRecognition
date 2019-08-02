@@ -61,7 +61,7 @@ def wordSegmentation(img, kernelSize=25, sigma=11, theta=7, minArea=0):
 
 
 def prepareImg(img, height):
-    "convert given image to grayscale image (if needed) and resize to desired height"
+    """ Convert given image to grayscale image (if needed) and resize to desired height. """
     assert img.ndim in (2, 3)
     if img.ndim == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
