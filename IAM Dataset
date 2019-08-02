@@ -1,0 +1,10 @@
+The data-loader expects the IAM dataset (or any other dataset that is compatible with it)
+in the data/ directory. Follow these instructions to get the dataset:
+
+1) Register for free at this website.
+2) Download words/words.tgz.
+3) Download ascii/words.txt.
+4) Put words.txt into the data/ directory.
+5) Create the directory data/words/.
+6) Put the content (directories a01, a02, ...) of words.tgz into data/words/.
+7) Go to data/ and run python checkDirs.py for a rough check if everything is ok.
