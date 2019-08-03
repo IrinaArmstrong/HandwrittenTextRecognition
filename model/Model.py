@@ -6,25 +6,40 @@ import numpy as np
 import tensorflow as tf
 import os
 
+class ModelFilePaths:
+	"filenames and paths to data"
+	modelDir = '../model/'  # dir, where to store saved model file (.zip)
+
 
 class DecoderType:
+	""" Types of CTC search technique """
 	BestPath = 0
 	BeamSearch = 1
-	WordBeamSearch = 2
+	# WordBeamSearch = 2
 
 
 class Model: 
-	"minimalistic TF model for HTR"
+	""" The simpliest TF model for HTR.
+	 	Architecture: TODO: Enter here model.sunmmary()
+	 	"""
 
-	# model constants
+	# Model constants
 	batchSize = 50
-	imgSize = (128, 32)
+	imgSize = (128, 32)# for TF =(w, h)
 	maxTextLen = 32
 
 	def __init__(self, charList, decoderType=DecoderType.BestPath, mustRestore=False, dump=False):
-		"init model: add CNN, RNN and CTC and initialize TF"
-		self.dump = dump # write output of NN to CSV file
-		self.charList = charList # symbols of dictionary
+		""" Configure NN structure: add CNN, RNN and CTC layers, set params for training and make session.
+			Arguments:
+				charList - symbols of dictionary (e.t. dictionary, numbers, punctuation marks),
+				decoderType- chosen type of CTC search technique, by default = BestPath,
+				mustRestore - True, if model must be restored (for inference), otherwise False,
+				dump - True, if write output of NN to CSV file, otherwise False.
+			Return:
+
+		"""
+		self.dump = dump
+		self.charList = charList
 		self.decoderType = decoderType
 		self.mustRestore = mustRestore
 		self.snapID = 0
@@ -32,27 +47,30 @@ class Model:
 		# Whether to use normalization over a batch or a population
 		self.is_train = tf.placeholder(tf.bool, name='is_train')
 
-		# input image batch: [batchSize, W=128, H=32]
+		# Input image batch: [batchSize, W=128, H=32]
 		self.inputImgs = tf.placeholder(tf.float32, shape=(None, Model.imgSize[0], Model.imgSize[1]))
 
-		# setup CNN, RNN and CTC
+		# Setup CNN, RNN and CTC
 		self.setupCNN()
 		self.setupRNN()
 		self.setupCTC()
 
-		# setup optimizer to train NN
+		# Setup optimizer to train NN
 		self.batchesTrained = 0
 		self.learningRate = tf.placeholder(tf.float32, shape=[]) # variable for list of learning rates
 		# get_collection - Returns a list of values in the collection with the given name.
 		# GraphKeys class contains many standard names for collections.
 		self.update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)  # UPDATE_OPS - ???
+
 		# control_dependencies - Returns a context manager that specifies control dependencies.
 		# So, only when self.update_ops have been executed ops under 'with' will be executed
 		with tf.control_dependencies(self.update_ops):
 			# minimize - combines calls compute_gradients() and apply_gradients().
+			# loss - CTC loss function for batch
 			# compute_gradients() - Compute gradients of loss for the variable. It returns a list of (gradient, variable) pairs
 			# apply_gradients() - Apply gradients to variables.  It returns an Operation that applies gradients.
 			self.optimizer = tf.train.RMSPropOptimizer(self.learningRate).minimize(self.loss)
+
 			# TODO: Change RMSPropOptimizer to Adam 
 			
 		# initialize TF
@@ -60,7 +78,13 @@ class Model:
 
 			
 	def setupCNN(self):
-		"create CNN layers and return output of these layers"
+		""" Create CNN layers and return output of these layers.
+		 	Architecture * 5:
+		 		- Convolutional layer with 'Same' padding
+		 		- Batch normalization layer,
+		 		- ReLu finction layer,
+		 		- MaxPooling layer with 'Valid' padding.
+		 	"""
 		# expand dimensions of image [?, W, H] -> [?, W, H, 1]
 		cnnIn4d = tf.expand_dims(input=self.inputImgs, axis=3)
 
@@ -91,7 +115,11 @@ class Model:
 
 
 	def setupRNN(self):
-		"create RNN layers and return output of these layers"
+		""" Create Bidirectional RNN (LSTM) layers and return output of these layers.
+			Architecture:
+				- LSTM layer with 256 units, * 2 (stacked on each other for BLSTM),
+				- Covered by dynamic RNN.
+		"""
 		# squeeze - Removes dimensions of size 1 from the shape of a tensor.
 		# From CNN output [batchSize, W=32, H=1, D=256] -> [batchSize, 32, 256]
 		rnnIn3d = tf.squeeze(self.cnnOut4d, axis=[2])
@@ -121,7 +149,8 @@ class Model:
 		
 
 	def setupCTC(self):
-		"create CTC loss and decoder and return them"
+		"""Create CTC loss and decoder and return them. """
+
 		# BxTxC -> TxBxC = [32, batchSize, 80]
 		self.ctcIn3dTBC = tf.transpose(self.rnnOut3d, [1, 0, 2])
 		# Give ground truth text as sparse tensor
@@ -150,49 +179,55 @@ class Model:
 			# Performs beam search decoding on the logits given in input.
 			# Returns: A tuple (decoded, log_probabilities)
 			self.decoder = tf.nn.ctc_beam_search_decoder(inputs=self.ctcIn3dTBC, sequence_length=self.seqLen, beam_width=50, merge_repeated=False)
-			# TODO: Use it or not???
-		elif self.decoderType == DecoderType.WordBeamSearch:
-			# import compiled word beam search operation (see https://github.com/githubharald/CTCWordBeamSearch)
-			word_beam_search_module = tf.load_op_library('TFWordBeamSearch.so')
-			# prepare information about language (dictionary, characters in dataset, characters forming words) 
-			chars = str().join(self.charList)
-			wordChars = open('../model/wordCharList.txt').read().splitlines()[0]
-			corpus = open('../data/corpus.txt').read()
-			# decode using the "Words" mode of word beam search
-			self.decoder = word_beam_search_module.word_beam_search(tf.nn.softmax(self.ctcIn3dTBC, dim=2), 50, 'Words', 0.0, corpus.encode('utf8'), chars.encode('utf8'), wordChars.encode('utf8'))
+
+			# TODO: Use WordBeamSearch or not???
+		# elif self.decoderType == DecoderType.WordBeamSearch:
+		# 	# import compiled word beam search operation (see https://github.com/githubharald/CTCWordBeamSearch)
+		# 	word_beam_search_module = tf.load_op_library('TFWordBeamSearch.so')
+		# 	# prepare information about language (dictionary, characters in dataset, characters forming words)
+		# 	chars = str().join(self.charList)
+		# 	wordChars = open('../model/wordCharList.txt').read().splitlines()[0]
+		# 	corpus = open('../data/corpus.txt').read()
+		# 	# decode using the "Words" mode of word beam search
+		# 	self.decoder = word_beam_search_module.word_beam_search(tf.nn.softmax(self.ctcIn3dTBC, dim=2), 50, 'Words', 0.0, corpus.encode('utf8'), chars.encode('utf8'), wordChars.encode('utf8'))
 
 
 	def setupTF(self):
-		"initialize TF"
-		print('Python: '+sys.version)
-		print('Tensorflow: '+tf.__version__)
+		""" Initialize TF.
+		 	Return:
+		 		(sess, saver) list:
+		 		sess - created TF session,
+		 		saver - tf.train.Saver object, that saves model to file.
+		"""
+		print('Python: ' + sys.version)
+		print('Tensorflow: ' + tf.__version__)
 
-		sess=tf.Session() # create TF session
+		sess = tf.Session() # create TF session
 		# Saver - saves model to file. 
 		# max_to_keep - indicates the maximum number of recent checkpoint files to keep. As new files are created, older files are deleted.
 		saver = tf.train.Saver(max_to_keep=1) 
-		modelDir = '../model/' # dir, where to store saved model
+
 		# latest_checkpoint - Finds the filename of latest saved checkpoint file.
-		latestSnapshot = tf.train.latest_checkpoint(modelDir)
+		latestSnapshot = tf.train.latest_checkpoint(ModelFilePaths.modelDir)
 
 		# if model must be restored (for inference), there must be a snapshot
 		if self.mustRestore and not latestSnapshot:
-			raise Exception('No saved model found in: ' + modelDir)
+			raise Exception('No saved model found in %s: ' % ModelFilePaths.modelDir)
 
 		# load saved model if available
 		if latestSnapshot:
-			print('Init with stored values from ' + latestSnapshot)
+			print('Init with stored values from %s' % latestSnapshot)
 			saver.restore(sess, latestSnapshot)
 		else:
 			# init all variables
 			print('Init with new values')
 			sess.run(tf.global_variables_initializer())
 
-		return (sess,saver)
+		return (sess, saver)
 
 
 	def toSparse(self, texts):
-		"put ground truth texts into sparse tensor for ctc_loss"
+		""" Put ground truth texts into sparse tensor for ctc_loss. """
 		# A 2-D int64 tensor, which specifies the indices of the elements in the sparse tensor that contain nonzero values.
 		indices = []
 		# A 1-D tensor of any type, which supplies the values for each element in indices. 

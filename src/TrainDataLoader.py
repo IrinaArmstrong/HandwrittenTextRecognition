@@ -167,10 +167,10 @@ class DataLoader:
 
 def preprocess(img, imgSize, dataAugmentation=False):
     """ Put img into target img of size imgSize, transpose for TF and normalize gray-values
-    :param img: input image,
-    :param imgSize: image size required by programm,
-    :param dataAugmentation: boolean, responsible for resize and rotate image for more samples or not,
-    :return: processed image
+         img: input image,
+         imgSize: image size required by programm,
+         dataAugmentation: boolean, responsible for resize and rotate image for more samples or not,
+    Return: processed image
     """
 
     # There are damaged files in IAM dataset - just use black image instead

@@ -50,7 +50,7 @@ def main():
             print("File #", i, " Name: ", f)
             print('Segmenting lines of sample %s' % f)
             # Check requirements for the image file to be processed be program
-            if not check_file(f):
+            if not check_file("%s/%s" % (FilePaths.fnTexts, f)):
                 continue
             img = cv2.imread('%s%s' % (FilePaths.fnTexts, f))
             tmp_lines = lineSegmentation(img)  # Lines found in one text

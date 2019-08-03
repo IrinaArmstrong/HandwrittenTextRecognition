@@ -34,7 +34,7 @@ def segment_to_words(file_path):
         print("File #", i, " Name: ", f)
         print('Segmenting words of sample %s' % f)
         # Check requirements for the image file to be processed be program
-        if not check_file(f):
+        if not check_file("%s/%s" % (file_path,f)):
             continue
         img = prepareImg(cv2.imread('%s%s' % (file_path, f)), 50)
         # execute segmentation with given parameters
