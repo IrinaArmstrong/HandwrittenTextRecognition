@@ -7,10 +7,10 @@ import editdistance
 from WordSegmentation import wordSegmentation, prepareImg
 
 class FilePaths:
-    "filenames and paths to data"
+    """ Filenames and paths to data. """
     fnCharList = '../model/charList.txt' # symbols of dictionary
     fnAccuracy = '../model/accuracy.txt' # to write accuracy of NN
-    fnTrain = '../data/train' # place to store training data
+    fnTrain = '../data/train/' # place to store training data
     fnWords = '../data/words/' # place/img to recognize text (test)
     fnLines = '../data/lines/' # place to store lines from segmented text
     fnTexts = '../data/texts/' # place to store
@@ -33,7 +33,7 @@ def segment_to_words(file_path):
     for (i, f) in enumerate(imgFiles):
         print("File #", i, " Name: ", f)
         print('Segmenting words of sample %s' % f)
-        # Check requirements for the image file to be processed be program
+        # Check requirements for the image file to be processed by program
         if not check_file("%s/%s" % (file_path,f)):
             continue
         img = prepareImg(cv2.imread('%s%s' % (file_path, f)), 50)
