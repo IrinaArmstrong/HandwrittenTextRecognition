@@ -223,7 +223,7 @@ def validate(model, loader):
     print('Character error rate: %f%%. Word accuracy: %f%%.' % (charErrorRate * 100.0, wordAccuracy * 100.0))
     return charErrorRate
 
-
+# TODO: Sort words in order of addition
 def infer(model, fpath):
     """ Recognize text in image provided by file path
         Arguments:
@@ -244,13 +244,14 @@ def infer(model, fpath):
             continue
         img = preprocess(cv2.imread('%s%s' % (fpath, fnImg), cv2.IMREAD_GRAYSCALE), Model.imgSize)
         batch = Batch(None, [img])
-        (recognized, probability) = model.inferBatch(batch, True)
+        (recognized, probability) = model.inferBatch(batch, False)
         recognized_words.append(recognized[0])
         print('Recognized:', '"' + recognized[0] + '"')
-        print('Probability:', probability[0])
+        if probability:
+            print('Probability:', probability[0])
 
     dump_results(recognized_words)
-#         TODO: Create function to write rezults to csv/txt file
+
 
 def dump_results(res):
     """ Dump(save) the output of the NN to txt file(s).
@@ -263,9 +264,9 @@ def dump_results(res):
     if not os.path.isdir(ModelFilePaths.dumpDir):
         os.mkdir(ModelFilePaths.dumpDir)
     # If file do not exist create it and open in append mode
-    # with open(FilePaths.fnDumpRes, 'a+') as f:
-        # f.write(csv)
-# open(FilePaths.fnCorpus, 'w').write(str(' ').join(loader.trainWords + loader.validationWords))
+    str_to_write = str(' ').join(res) + "\n"
+    with open(FilePaths.fnDumpRes, 'a+') as f:
+        f.write(str_to_write)
 
 
 

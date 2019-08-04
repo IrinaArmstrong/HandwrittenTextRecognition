@@ -77,7 +77,7 @@ def save_tmp_data(data, path, num, dtype):
         # iterate over all segmented lines
         print('Segmented into %d lines' % len(data))
         for (j, w) in enumerate(data):
-            fn = '%s/%d%d.png' % (path, num, j)
+            fn = '%s/%d.png' % (path, j)
             cv2.imwrite(fn, w)  # save line
 
 
@@ -91,11 +91,17 @@ def clear_dirs(dtype):
         raise ValueError("dtype should be in 'texts' or 'lines'")
 
     if dtype == 'texts':
-        shutil.rmtree(FilePaths.fnLines)
-        os.mkdir('%s' % FilePaths.fnLines)
+        # os.mkdir('%s' % FilePaths.fnLines)
+        dirs = os.listdir(FilePaths.fnLines)
+        for d in dirs:
+            shutil.rmtree("%s%s" % (FilePaths.fnLines, d))
 
-        shutil.rmtree(FilePaths.fnWords)
-        os.mkdir('%s' % FilePaths.fnWords)
+        # shutil.rmtree(FilePaths.fnWords)
+        # os.mkdir('%s' % FilePaths.fnWords)
+        dirs = os.listdir(FilePaths.fnWords)
+        for d in dirs:
+            shutil.rmtree("%s%s" % (FilePaths.fnWords, d))
+
     elif dtype == 'lines':
         files = os.listdir(FilePaths.fnLines)
         for f in files:
