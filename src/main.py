@@ -8,7 +8,7 @@ from LinesSegmentation import lineSegmentation
 from WordSegmentation import wordSegmentation, prepareImg
 from UserDataLoader import segment_to_words, save_tmp_data, clear_dirs, FilePaths, check_file
 from TrainDataLoader import DataLoader, Batch, preprocess
-from Model import Model, DecoderType
+from Model import Model, DecoderType, ModelFilePaths
 
 
 def main():
@@ -40,9 +40,9 @@ def main():
         # Check if dir with data is not empty
         imgFiles = os.listdir(FilePaths.fnTexts)
         if not imgFiles:
-            print("Files found in data dir: %s" % FilePaths.fnTexts)
+            print("Error! No files found in data dir:%s" % FilePaths.fnTexts)
             return -1
-        print("Error! No files found in data dir:{0}".format(len(imgFiles)))
+        print("Files found in data dir:{0}".format(len(imgFiles)))
         # found_lines = [] # Lines found in ALL texts
         # i - text index, f - filename of text image
         for (i, f) in enumerate(imgFiles):
@@ -101,9 +101,31 @@ def main():
 
         # Infer text on test images
     else:
-        print(open(FilePaths.fnAccuracy).read())
+        if os.path.exists('%s' % FilePaths.fnAccuracy):
+            print(open(FilePaths.fnAccuracy).read())
         model = Model(open(FilePaths.fnCharList).read(), decoderType, mustRestore=True, dump=args.dump)
-        infer(model, FilePaths.fnWords)
+
+        if args.text:
+            dirs = os.listdir(FilePaths.fnWords)
+            if not dirs:
+                print("No directions with words found in data direction: %s" % FilePaths.fnWords)
+                return -1
+            # i - text index, f - filename of text image
+            for (i, d) in enumerate(dirs):
+                print("Direction from text #", i, " Named: ", d)
+                print('Executing files from %s...' % d)
+                files = os.listdir("%s%s/" % (FilePaths.fnWords, d))
+                if not files:
+                    print("No words found in data direction: %s" % ("%s%s/" % (FilePaths.fnWords, d)))
+                    continue
+                infer(model, "%s%s/" % (FilePaths.fnWords, d))
+
+        elif args.line:
+            files = os.listdir(FilePaths.fnWordsFromLines)
+            if not files:
+                print("No files with words found in data direction: %s" % FilePaths.fnWordsFromLines)
+                return -1
+        infer(model, FilePaths.fnWordsFromLines)
 
 
 def train(model, loader):
@@ -213,19 +235,37 @@ def infer(model, fpath):
         imgFiles = os.listdir(fpath)
     else:
         imgFiles = fpath  # If it a file - ??? (could it be?)
+    recognized_words = []
     for (i, fnImg) in enumerate(imgFiles):
         print("File #", i, " Name: ", fnImg)
-        print('Segmenting words of sample %s' % fnImg)
+        print('Recognizing text from image %s...' % fnImg)
         # Check requirements for the image file to be processed by program
         if not check_file("%s/%s" % (fpath, fnImg)):
             continue
         img = preprocess(cv2.imread('%s%s' % (fpath, fnImg), cv2.IMREAD_GRAYSCALE), Model.imgSize)
         batch = Batch(None, [img])
         (recognized, probability) = model.inferBatch(batch, True)
+        recognized_words.append(recognized[0])
         print('Recognized:', '"' + recognized[0] + '"')
         print('Probability:', probability[0])
+
+    dump_results(recognized_words)
 #         TODO: Create function to write rezults to csv/txt file
 
+def dump_results(res):
+    """ Dump(save) the output of the NN to txt file(s).
+        Arguments:
+            res - output of the NN, consist of strings
+        Note: All files in "../dump/" is in .gitignore !!!
+    """
+
+    # If path do not exist create it
+    if not os.path.isdir(ModelFilePaths.dumpDir):
+        os.mkdir(ModelFilePaths.dumpDir)
+    # If file do not exist create it and open in append mode
+    # with open(FilePaths.fnDumpRes, 'a+') as f:
+        # f.write(csv)
+# open(FilePaths.fnCorpus, 'w').write(str(' ').join(loader.trainWords + loader.validationWords))
 
 
 

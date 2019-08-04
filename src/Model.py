@@ -207,7 +207,7 @@ class Model:
 		sess = tf.Session() # create TF session
 		# Saver - saves model to file. 
 		# max_to_keep - indicates the maximum number of recent checkpoint files to keep. As new files are created, older files are deleted.
-		saver = tf.train.Saver(max_to_keep=1) 
+		saver = tf.train.Saver(max_to_keep=1)
 
 		# latest_checkpoint - Finds the filename of latest saved checkpoint file.
 		latestSnapshot = tf.train.latest_checkpoint(ModelFilePaths.modelDir)
@@ -342,6 +342,7 @@ class Model:
 			# Forming filename
 			fn = ModelFilePaths.dumpDir + 'rnnOutput_' + str(b)+'.csv'
 			print('Write dump of NN to file: ' + fn)
+
 			with open(fn, 'w') as f:
 				f.write(csv)
 

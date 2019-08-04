@@ -12,9 +12,11 @@ class FilePaths:
     fnAccuracy = '../model/accuracy.txt' # to write accuracy of NN
     fnTrain = '../data/train/' # place to store training data
     fnWords = '../data/words/' # place/img to recognize text (test)
+    fnWordsFromLines = '../data/words/fromlines_words/' # place/img to recognize text (test)
     fnLines = '../data/lines/' # place to store lines from segmented text
     fnTexts = '../data/texts/' # place to store
     fnCorpus = '../data/corpus.txt' # list of recognized words
+    fnDumpRes = '../dump/results.txt'  # file, where to dump(save) the output of the NN in txt file(s)
 
 def segment_to_words(file_path):
     """Segment line to words.
