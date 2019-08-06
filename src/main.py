@@ -125,7 +125,7 @@ def main():
             if not files:
                 print("No files with words found in data direction: %s" % FilePaths.fnWordsFromLines)
                 return -1
-        infer(model, FilePaths.fnWordsFromLines)
+            infer(model, FilePaths.fnWordsFromLines)
 
 
 def train(model, loader):

@@ -61,7 +61,8 @@ class DataLoader:
 
         # bad samples = empty/wrongly separated images
         bad_samples = []  # If some images found to be damaged
-        bad_samples_reference = ['a01-117-05-02.png', 'r06-022-03-05.png']  # Damaged images expected
+        bad_samples_reference = [] # Damaged images expected
+            # 'a01-117-05-02.png', 'r06-022-03-05.png']
 
         for line in f:
             # ignore comment line
@@ -77,7 +78,7 @@ class DataLoader:
             # filename: part1-part2-part3 --> part1/part1-part2/part1-part2-part3.png
             # Example: a01-117-05-02.png
             fileNameSplit = lineSplit[0].split('-')
-            fileName = filePath + 'words/' + fileNameSplit[0] + '/' + fileNameSplit[0] + '-' + fileNameSplit[1] + \
+            fileName = filePath + 'train/' + fileNameSplit[0] + '/' + fileNameSplit[0] + '-' + fileNameSplit[1] + \
                        '/' + lineSplit[0] + '.png'
 
             # GT text are columns starting at 9

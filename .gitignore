@@ -1,6 +1,5 @@
 data/words/
 data/train/
-data/train/words.txt
 src/__pycache__/
 model/checkpoint
 model/snapshot-*
