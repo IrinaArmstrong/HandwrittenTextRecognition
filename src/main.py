@@ -137,7 +137,7 @@ def train(model, loader):
     epoch = 0  # number of training epochs since start
     bestCharErrorRate = float('inf')  # best validation character error rate
     noImprovementSince = 0  # number of epochs no improvement of character error rate occurred
-    earlyStopping = 5  # stop training after this number of epochs without improvement
+    earlyStopping = 3  # stop training after this number of epochs without improvement (was 5)
 
     # Endless cycle for training, only ends when no improvement of character
     # error rate occurred more then number of epochs, chosen for early stopping
@@ -222,6 +222,7 @@ def validate(model, loader):
     wordAccuracy = numWordOK / numWordTotal
     print('Character error rate: %f%%. Word accuracy: %f%%.' % (charErrorRate * 100.0, wordAccuracy * 100.0))
     return charErrorRate
+
 
 # TODO: Sort words in order of addition
 def infer(model, fpath):

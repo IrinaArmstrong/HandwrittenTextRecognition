@@ -6,6 +6,8 @@ import random
 import numpy as np
 import cv2
 from LinesSegmentation import normalize
+from DataUtils import UtilsFilePaths
+from UserDataLoader import FilePaths
 
 class Sample:
     """ Single sample from the dataset
@@ -55,6 +57,7 @@ class DataLoader:
         self.imgSize = imgSize
         self.samples = []  # list of samples of dataset (general truth + imgFileName)
 
+        # TODO: change paths to UtilsFilePaths or FilePaths
         # Open file with iam database word information
         f = open(filePath + 'words.txt')
         chars = set()  # list of chars, used in texts
@@ -72,21 +75,20 @@ class DataLoader:
             # split() - splits str into some other strings separated
             lineSplit = line.strip().split(' ')
 
-            # it must be more then 9 substrings
-            assert len(lineSplit) >= 9
+            # it must be more then 2 substrings
+            assert len(lineSplit) >= 2
 
-            # filename: part1-part2-part3 --> part1/part1-part2/part1-part2-part3.png
-            # Example: a01-117-05-02.png
+            # filename: part1-part2.png transcription --> ../data/train/part1/part1-part2.png
+            # Example: ../data/train/000/000-100.png
             fileNameSplit = lineSplit[0].split('-')
-            fileName = filePath + 'train/' + fileNameSplit[0] + '/' + fileNameSplit[0] + '-' + fileNameSplit[1] + \
-                       '/' + lineSplit[0] + '.png'
+            # TODO: change filepath to UtilsFilePaths or FilePaths
+            fileName = filePath + fileNameSplit[0] + '/' + fileNameSplit[0] + '-' + fileNameSplit[1] + '.png'
 
-            # GT text are columns starting at 9
-            gtText = self.truncateLabel(' '.join(lineSplit[8:]), maxTextLen)  # ???
+            # GT text are columns starting at 2
+            gtText = self.truncateLabel(' '.join(lineSplit[1:]), maxTextLen)  # ???
             chars = chars.union(set(list(gtText)))  # Make list of chars, used in texts
 
             # Check if image is not empty
-            # TODO: make check with check_file() function from UserDataLoader and then exclude 'bad samples' from training/validation sets
             if not os.path.getsize(fileName):
                 bad_samples.append(lineSplit[0] + '.png')
                 continue
@@ -95,28 +97,28 @@ class DataLoader:
             self.samples.append(Sample(gtText, fileName))
 
         # Some images in the IAM dataset are known to be damaged, don't show warning for them
-        # TODO: exclude 'bad samples' from training/validation sets
         if set(bad_samples) != set(bad_samples_reference):
             print("Warning, damaged images found:", bad_samples)
             print("Damaged images expected:", bad_samples_reference)
 
         # Split into training and validation set: 95% - 5%
         splitIdx = int(0.95 * len(self.samples))
-        self.trainSamples = self.samples[:splitIdx]
-        self.validationSamples = self.samples[splitIdx:]
+        self.trainSamples = self.samples[:splitIdx]  # 114 000 samples
+        self.validationSamples = self.samples[splitIdx:]  # 6 000 samples
 
         # Put general truth words into lists
         self.trainWords = [x.gtText for x in self.trainSamples]
         self.validationWords = [x.gtText for x in self.validationSamples]
 
         # Number of randomly chosen samples per epoch for training
-        self.numTrainSamplesPerEpoch = 25000
+        self.numTrainSamplesPerEpoch = 20000
 
         # Start with train set
         self.trainSet()
 
         # List of all chars in dataset
         self.charList = sorted(list(chars))
+
 
     def truncateLabel(self, text, maxTextLen):
         """ ctc_loss can't compute loss if it cannot find a mapping between text label and input labels.
@@ -134,6 +136,7 @@ class DataLoader:
                 return text[:i]
         return text
 
+
     def trainSet(self):
         """ Switch to randomly chosen subset of training set. """
         self.dataAugmentation = True
@@ -141,19 +144,23 @@ class DataLoader:
         random.shuffle(self.trainSamples)  # mix samples
         self.samples = self.trainSamples[:self.numTrainSamplesPerEpoch]  # get first 25000 of them
 
+
     def validationSet(self):
         """ Switch to validation set. """
         self.dataAugmentation = False
         self.currIdx = 0  # reset index
         self.samples = self.validationSamples
 
+
     def getIteratorInfo(self):
         """ Current batch index and overall number of batches. """
         return (self.currIdx // self.batchSize + 1, len(self.samples) // self.batchSize)
 
+
     def hasNext(self):
         """ True - if iterator has next element, else - False. """
         return self.currIdx + self.batchSize <= len(self.samples)
+
 
     def getNext(self):
         """ Iterator gets next batch of samples addresses, then load and preprocess images. """
@@ -175,7 +182,6 @@ def preprocess(img, imgSize, dataAugmentation=False):
     """
 
     # There are damaged files in IAM dataset - just use black image instead
-    # TODO: exclude 'bad samples' from training/validation sets
     if img is None:
         img = np.zeros([imgSize[1], imgSize[0]])
 
